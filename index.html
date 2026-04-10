@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista de Compras</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #faf7f2;
+    --border: #e0d9ce;
+    --border2: #ccc4b4;
+    --accent: #2d5a27;
+    --accent2: #4a8c42;
+    --text: #1a1a18;
+    --text-dim: #8a8070;
+    --done-bg: #eef4ed;
+    --done-text: #6a9464;
+    --red: #c0392b;
+    --red-light: #fdf0ee;
+    --tag-bg: #ede8df;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--accent);
+    padding: 32px 24px 24px;
+    position: sticky; top: 0; z-index: 10;
+  }
+
+  .header-inner {
+    max-width: 600px; margin: 0 auto;
+  }
+
+  .header-top {
+    display: flex; align-items: flex-end;
+    justify-content: space-between; margin-bottom: 16px;
+  }
+
+  .header-tabs {
+    display: flex; gap: 0; margin-bottom: 16px;
+    border-bottom: 1px solid rgba(245,240,232,0.15);
+  }
+  .header-tab {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    color: rgba(245,240,232,0.5); padding: 6px 16px 8px;
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s; margin-bottom: -1px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .header-tab.active {
+    color: #f5f0e8; border-bottom-color: #f5f0e8;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 2rem; font-weight: 300;
+    color: #f5f0e8; letter-spacing: -0.02em; line-height: 1;
+  }
+
+  .header-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem; color: rgba(245,240,232,0.5);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding-bottom: 4px;
+  }
+
+  /* ADD BAR */
+  .add-bar {
+    display: flex; gap: 8px;
+  }
+
+  .add-input {
+    flex: 1;
+    background: rgba(245,240,232,0.12);
+    border: 1px solid rgba(245,240,232,0.2);
+    color: #f5f0e8;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    border-radius: 2px;
+    transition: background 0.2s;
+  }
+  .add-input::placeholder { color: rgba(245,240,232,0.4); }
+  .add-input:focus { background: rgba(245,240,232,0.18); }
+
+  .add-btn-main {
+    background: rgba(245,240,232,0.15);
+    border: 1px solid rgba(245,240,232,0.25);
+    color: #f5f0e8;
+    padding: 12px 18px;
+    font-size: 1.3rem; cursor: pointer;
+    transition: background 0.2s; border-radius: 2px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .add-btn-main:active { background: rgba(245,240,232,0.25); }
+
+  /* MAIN */
+  main {
+    max-width: 600px; margin: 0 auto;
+    padding: 20px 16px 100px;
+  }
+
+  /* PROGRESS */
+  .progress-wrap {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; padding: 14px 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  .progress-bar {
+    flex: 1; height: 4px;
+    background: var(--border); border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent);
+    border-radius: 2px; transition: width 0.4s ease;
+  }
+
+  .progress-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; color: var(--text-dim);
+    letter-spacing: 0.08em; white-space: nowrap;
+  }
+
+  .clear-done {
+    background: none; border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dim);
+    cursor: pointer; padding: 2px 0;
+    transition: color 0.2s; white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .clear-done:hover { color: var(--red); }
+
+  /* FILTERS */
+  .filters {
+    display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+
+  .filter-pill {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-dim); padding: 6px 14px;
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.15s; border-radius: 20px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .filter-pill.active {
+    background: var(--accent); border-color: var(--accent);
+    color: #f5f0e8;
+  }
+
+  /* CATEGORY GROUP */
+  .cat-group { margin-bottom: 8px; }
+
+  .cat-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0 6px; cursor: pointer; user-select: none;
+  }
+
+  .cat-emoji { font-size: 1rem; }
+
+  .cat-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-dim);
+    flex: 1;
+  }
+
+  .cat-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem; color: var(--text-dim);
+  }
+
+  .cat-toggle { font-size: 0.65rem; color: var(--text-dim); transition: transform 0.2s; }
+  .cat-toggle.collapsed { transform: rotate(-90deg); }
+
+  .cat-items { display: flex; flex-direction: column; gap: 2px; }
+
+  /* ITEM ROW */
+  .item-row {
+    display: flex; align-items: center; gap: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 14px 14px; border-radius: 2px;
+    transition: all 0.15s; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .item-row:hover { border-color: var(--border2); }
+  .item-row.done { background: var(--done-bg); border-color: transparent; opacity: 0.7; }
+
+  .item-check {
+    width: 24px; height: 24px; flex-shrink: 0;
+    border: 1.5px solid var(--border2); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; margin-right: 12px;
+  }
+  .item-row:hover .item-check { border-color: var(--accent); }
+  .item-row.done .item-check { background: var(--accent); border-color: var(--accent); }
+  .checkmark { display: none; color: white; font-size: 12px; font-weight: bold; }
+  .item-row.done .checkmark { display: block; }
+
+  .item-body { flex: 1; min-width: 0; }
+
+  .item-name {
+    font-size: 0.95rem; color: var(--text); line-height: 1.3;
+  }
+  .item-row.done .item-name { text-decoration: line-through; color: var(--done-text); }
+
+  .item-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; color: var(--text-dim);
+    margin-top: 2px; letter-spacing: 0.02em;
+  }
+
+  .item-right {
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  }
+
+  .item-qty {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; color: var(--accent);
+    background: var(--done-bg); padding: 3px 8px;
+    border-radius: 20px; white-space: nowrap;
+  }
+
+  .item-actions {
+    display: flex; gap: 4px;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .item-row:hover .item-actions { opacity: 1; }
+
+  .act-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-dim); padding: 4px 8px;
+    font-size: 0.65rem; font-family: 'DM Mono', monospace;
+    cursor: pointer; transition: all 0.15s;
+    border-radius: 2px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .act-btn:hover { border-color: var(--border2); color: var(--text); }
+  .act-btn.del:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center; padding: 60px 20px;
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: 1.1rem; color: var(--text-dim); font-weight: 300;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(26,26,24,0.5); z-index: 100;
+    align-items: flex-end; justify-content: center;
+    backdrop-filter: blur(2px);
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 12px 12px 0 0;
+    padding: 24px 24px 40px;
+    width: 100%; max-width: 600px;
+    max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border2); border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  .modal h2 {
+    font-family: 'Fraunces', serif; font-weight: 300;
+    font-size: 1.3rem; margin-bottom: 20px; color: var(--text);
+  }
+
+  .form-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .form-col { flex: 1; min-width: 0; }
+
+  .form-label {
+    display: block; font-family: 'DM Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;
+  }
+
+  .form-input, .form-select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    outline: none; border-radius: 2px; transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--surface); }
+
+  /* QUICK CATS */
+  .quick-cats {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;
+  }
+  .quick-cat {
+    background: var(--tag-bg); border: 1px solid var(--border);
+    color: var(--text-dim); padding: 5px 10px;
+    font-family: 'DM Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.06em; cursor: pointer; border-radius: 20px;
+    transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+  }
+  .quick-cat.selected { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .modal-actions {
+    display: flex; gap: 10px; margin-top: 20px;
+  }
+
+  .btn-cancel {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-dim); padding: 12px 20px;
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; transition: all 0.2s;
+  }
+  .btn-cancel:hover { border-color: var(--border2); color: var(--text); }
+
+  .btn-save {
+    flex: 1; background: var(--accent); border: 1px solid var(--accent);
+    color: white; padding: 12px 20px;
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px;
+    font-weight: 500; transition: opacity 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-save:hover { opacity: 0.85; }
+
+  /* CATALOG SECTION */
+  #section-catalog { display: none; }
+  #section-lista { display: block; }
+
+  .catalog-toolbar {
+    display: flex; gap: 8px; margin-bottom: 16px; align-items: center;
+  }
+  .catalog-search {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    outline: none; border-radius: 2px; transition: border-color 0.2s;
+  }
+  .catalog-search:focus { border-color: var(--accent); }
+  .catalog-search::placeholder { color: var(--text-dim); }
+
+  .btn-new-product {
+    background: var(--accent); border: 1px solid var(--accent);
+    color: white; padding: 10px 16px;
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .catalog-grid {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+
+  .catalog-item {
+    display: flex; align-items: center; gap: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 12px 14px; border-radius: 2px; transition: border-color 0.15s;
+  }
+  .catalog-item:hover { border-color: var(--border2); }
+
+  .catalog-item-body { flex: 1; min-width: 0; }
+  .catalog-item-name { font-size: 0.95rem; color: var(--text); }
+  .catalog-item-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.63rem; color: var(--text-dim);
+    margin-top: 2px; letter-spacing: 0.02em;
+  }
+
+  .catalog-item-right {
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  }
+
+  .catalog-add-btn {
+    background: var(--done-bg); border: 1px solid var(--border);
+    color: var(--accent); padding: 5px 12px;
+    font-family: 'DM Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent; white-space: nowrap;
+  }
+  .catalog-add-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .catalog-act-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-dim); padding: 5px 8px;
+    font-size: 0.65rem; font-family: 'DM Mono', monospace;
+    cursor: pointer; transition: all 0.15s; border-radius: 2px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .catalog-act-btn:hover { border-color: var(--border2); color: var(--text); }
+  .catalog-act-btn.del:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+  .catalog-empty {
+    text-align: center; padding: 50px 20px;
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: 1.05rem; color: var(--text-dim); font-weight: 300;
+  }
+
+  /* PRODUCT SUGGESTIONS in modal */
+  .suggestions-wrap {
+    margin-bottom: 16px;
+  }
+  .suggestions-label {
+    font-family: 'DM Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 8px; display: block;
+  }
+  .suggestions-list {
+    display: flex; flex-direction: column; gap: 4px;
+    max-height: 200px; overflow-y: auto;
+  }
+  .suggestion-row {
+    display: flex; align-items: center;
+    background: var(--bg); border: 1px solid var(--border);
+    padding: 10px 12px; border-radius: 2px; cursor: pointer;
+    transition: border-color 0.15s; gap: 10px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .suggestion-row:hover { border-color: var(--accent); }
+  .suggestion-row-body { flex: 1; min-width: 0; }
+  .suggestion-row-name { font-size: 0.88rem; color: var(--text); }
+  .suggestion-row-meta { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--text-dim); margin-top: 1px; }
+  .suggestion-use {
+    font-family: 'DM Mono', monospace; font-size: 0.6rem;
+    color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .modal-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 16px 0; color: var(--text-dim);
+    font-family: 'DM Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .modal-divider::before, .modal-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Mobile always show actions */
+  @media (max-width: 500px) {
+    .item-actions { opacity: 1; }
+    h1 { font-size: 1.7rem; }
+  }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-top">
+      <h1 id="header-title">Lista de Compras</h1>
+      <span class="header-count" id="header-count">0 itens</span>
+    </div>
+    <div class="header-tabs">
+      <button class="header-tab active" onclick="switchTab('lista', this)">Lista</button>
+      <button class="header-tab" onclick="switchTab('catalog', this)">Produtos</button>
+    </div>
+    <div class="add-bar" id="add-bar-lista">
+      <input type="text" class="add-input" id="quick-input" placeholder="Adicionar produto…" onkeydown="quickAddKeydown(event)">
+      <button class="add-btn-main" onclick="openModal('add')" title="Mais opções">＋</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="section-lista">
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <span class="progress-text" id="progress-text">0 / 0</span>
+      <button class="clear-done" onclick="clearDone()">Limpar ✓</button>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="filter-pill active" onclick="setFilter('all', this)">Todos</button>
+      <button class="filter-pill" onclick="setFilter('pending', this)">Por comprar</button>
+      <button class="filter-pill" onclick="setFilter('done', this)">Comprados</button>
+    </div>
+
+    <div id="list-container"></div>
+  </div>
+
+  <div id="section-catalog">
+    <div class="catalog-toolbar">
+      <input type="text" class="catalog-search" id="catalog-search" placeholder="Pesquisar produtos…" oninput="renderCatalog()">
+      <button class="btn-new-product" onclick="openCatalogModal()">＋ Novo</button>
+    </div>
+    <div class="catalog-grid" id="catalog-grid"></div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="modal-title">Adicionar produto</h2>
+
+    <div class="suggestions-wrap" id="suggestions-wrap" style="display:none">
+      <span class="suggestions-label">Da tua lista de produtos</span>
+      <div class="suggestions-list" id="suggestions-list"></div>
+      <div class="modal-divider">ou preenche manualmente</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-col">
+        <label class="form-label">Produto *</label>
+        <input type="text" class="form-input" id="input-name" placeholder="ex: Leite">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-col" style="flex:0 0 80px">
+        <label class="form-label">Qtd</label>
+        <input type="number" class="form-input" id="input-qty" placeholder="1" min="0" step="0.1">
+      </div>
+      <div class="form-col" style="flex:0 0 100px">
+        <label class="form-label">Unidade</label>
+        <select class="form-select" id="input-unit">
+          <option value="">—</option>
+          <option value="un">un</option>
+          <option value="kg">kg</option>
+          <option value="g">g</option>
+          <option value="L">L</option>
+          <option value="ml">ml</option>
+          <option value="cx">cx</option>
+          <option value="pac">pac</option>
+          <option value="dz">dz</option>
+        </select>
+      </div>
+      <div class="form-col">
+        <label class="form-label">Categoria</label>
+        <input type="text" class="form-input" id="input-cat" placeholder="opcional">
+      </div>
+    </div>
+
+    <div class="quick-cats" id="quick-cats"></div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveItem()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CATALOG MODAL -->
+<div class="modal-overlay" id="catalog-modal-overlay" onclick="handleCatalogOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="catalog-modal-title">Novo produto</h2>
+
+    <div class="form-row">
+      <div class="form-col">
+        <label class="form-label">Nome *</label>
+        <input type="text" class="form-input" id="cat-input-name" placeholder="ex: Leite meio-gordo">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-col" style="flex:0 0 80px">
+        <label class="form-label">Qtd</label>
+        <input type="number" class="form-input" id="cat-input-qty" placeholder="1" min="0" step="0.1">
+      </div>
+      <div class="form-col" style="flex:0 0 100px">
+        <label class="form-label">Unidade</label>
+        <select class="form-select" id="cat-input-unit">
+          <option value="">—</option>
+          <option value="un">un</option>
+          <option value="kg">kg</option>
+          <option value="g">g</option>
+          <option value="L">L</option>
+          <option value="ml">ml</option>
+          <option value="cx">cx</option>
+          <option value="pac">pac</option>
+          <option value="dz">dz</option>
+        </select>
+      </div>
+      <div class="form-col">
+        <label class="form-label">Categoria</label>
+        <input type="text" class="form-input" id="cat-input-cat" placeholder="opcional">
+      </div>
+    </div>
+
+    <div class="quick-cats" id="cat-quick-cats"></div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCatalogModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveCatalogItem()">Guardar produto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CATEGORIES config
+// ============================================================
+const CAT_ICONS = {
+  'Fruta & Legumes':    '🥦',
+  'Carne & Peixe':      '🥩',
+  'Lacticínios':        '🥛',
+  'Padaria':            '🍞',
+  'Mercearia':          '🛒',
+  'Bebidas':            '🧃',
+  'Bebidas vegetais':   '🌿',
+  'Frutos secos':       '🥜',
+  'Sementes':           '🌱',
+  'Congelados':         '❄️',
+  'Limpeza':            '🧹',
+  'Higiene pessoal':    '🧴',
+  'Beleza & Estética':  '💄',
+  'Farmácia':           '💊',
+  'Parafarmácia':       '🩺',
+  'Ótica':              '👓',
+  'Animais domésticos': '🐾',
+  'Outros':             '📦',
+};
+
+const QUICK_CATS = Object.keys(CAT_ICONS);
+
+// ============================================================
+// STATE
+// ============================================================
+let items = [];
+let nextId = 1;
+let currentFilter = 'all';
+let modalMode = 'add';
+let editingId = null;
+
+// CATALOG state
+let catalog = [];
+let catalogNextId = 1;
+let catalogEditingId = null;
+let currentTab = 'lista';
+
+// ============================================================
+// INIT / SAVE
+// ============================================================
+function init() {
+  const saved = localStorage.getItem('lista_items');
+  const savedId = localStorage.getItem('lista_nextId');
+  const savedCatalog = localStorage.getItem('lista_catalog');
+  const savedCatalogId = localStorage.getItem('lista_catalog_nextId');
+  items  = saved   ? JSON.parse(saved) : [];
+  nextId = savedId ? parseInt(savedId) : 1;
+  catalog = savedCatalog ? JSON.parse(savedCatalog) : [];
+  catalogNextId = savedCatalogId ? parseInt(savedCatalogId) : 1;
+  buildQuickCats();
+  buildCatalogQuickCats();
+  render();
+}
+
+function save() {
+  localStorage.setItem('lista_items',  JSON.stringify(items));
+  localStorage.setItem('lista_nextId', nextId);
+}
+
+function saveCatalog() {
+  localStorage.setItem('lista_catalog', JSON.stringify(catalog));
+  localStorage.setItem('lista_catalog_nextId', catalogNextId);
+}
+
+// ============================================================
+// QUICK ADD (Enter on header input)
+// ============================================================
+function quickAddKeydown(e) {
+  if (e.key !== 'Enter') return;
+  const name = document.getElementById('quick-input').value.trim();
+  if (!name) return;
+  items.push({ id: nextId++, name, qty: '', unit: '', cat: '', done: false });
+  document.getElementById('quick-input').value = '';
+  save(); render();
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function getCatIcon(cat) {
+  return CAT_ICONS[cat] || '📦';
+}
+
+function render() {
+  const container = document.getElementById('list-container');
+  let filtered = items.filter(i => {
+    if (currentFilter === 'done')    return i.done;
+    if (currentFilter === 'pending') return !i.done;
+    return true;
+  });
+
+  // group by category
+  const groups = {};
+  const NO_CAT = '— Sem categoria';
+  for (const item of filtered) {
+    const key = item.cat || NO_CAT;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  }
+
+  // sort: categories with names first, then no-cat
+  const sortedKeys = Object.keys(groups).sort((a,b) => {
+    if (a === NO_CAT) return 1;
+    if (b === NO_CAT) return -1;
+    return a.localeCompare(b);
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty">${
+      currentFilter === 'done' ? 'Nada comprado ainda.' :
+      currentFilter === 'pending' ? 'Tudo comprado! 🎉' :
+      'A lista está vazia.<br>Adiciona o primeiro produto.'
+    }</div>`;
+    updateStats();
+    return;
+  }
+
+  let html = '';
+  for (const key of sortedKeys) {
+    const groupItems = groups[key];
+    const isNoCat = key === NO_CAT;
+    const icon = isNoCat ? '' : getCatIcon(key);
+    const doneCount = groupItems.filter(i => i.done).length;
+    const safeKey = key.replace(/[^a-zA-Z0-9]/g, '_');
+
+    html += `<div class="cat-group">
+      <div class="cat-header" onclick="toggleCat('${safeKey}', this)">
+        ${icon ? `<span class="cat-emoji">${icon}</span>` : ''}
+        <span class="cat-name">${escHtml(isNoCat ? 'Sem categoria' : key)}</span>
+        <span class="cat-count">${doneCount}/${groupItems.length}</span>
+        <span class="cat-toggle">▾</span>
+      </div>
+      <div class="cat-items" id="cat-${safeKey}">
+        ${groupItems.map(i => renderItem(i)).join('')}
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+  updateStats();
+}
+
+function renderItem(item) {
+  const dc = item.done ? 'done' : '';
+  const qtyHtml = (item.qty || item.unit)
+    ? `<span class="item-qty">${item.qty || ''}${item.qty && item.unit ? ' ' : ''}${item.unit || ''}</span>`
+    : '';
+  return `<div class="item-row ${dc}" onclick="toggleDone(${item.id}, event)">
+    <div class="item-check"><span class="checkmark">✓</span></div>
+    <div class="item-body">
+      <div class="item-name">${escHtml(item.name)}</div>
+      ${item.cat ? `<div class="item-sub">${escHtml(item.cat)}</div>` : ''}
+    </div>
+    <div class="item-right">
+      ${qtyHtml}
+      <div class="item-actions" onclick="event.stopPropagation()">
+        <button class="act-btn" onclick="openModal('edit', ${item.id})">editar</button>
+        <button class="act-btn del" onclick="deleteItem(${item.id})">×</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleCat(key, el) {
+  const grid = document.getElementById(`cat-${key}`);
+  const tog  = el.querySelector('.cat-toggle');
+  if (!grid) return;
+  const hidden = grid.style.display === 'none';
+  grid.style.display = hidden ? '' : 'none';
+  tog.classList.toggle('collapsed', !hidden);
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function updateStats() {
+  const total = items.length;
+  const done  = items.filter(i => i.done).length;
+  const pct   = total ? Math.round(done/total*100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${done} / ${total}`;
+  document.getElementById('header-count').textContent  =
+    total === 0 ? '0 itens' : `${total - done} por comprar`;
+}
+
+// ============================================================
+// TOGGLE / DELETE / CLEAR
+// ============================================================
+function toggleDone(id, event) {
+  if (event.target.closest('.item-actions')) return;
+  const item = items.find(i => i.id === id);
+  if (item) { item.done = !item.done; save(); render(); }
+}
+
+function deleteItem(id) {
+  items = items.filter(i => i.id !== id);
+  save(); render();
+}
+
+function clearDone() {
+  if (!items.some(i => i.done)) return;
+  if (!confirm('Remover todos os itens já comprados?')) return;
+  items = items.filter(i => !i.done);
+  save(); render();
+}
+
+// ============================================================
+// FILTER
+// ============================================================
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function buildQuickCats() {
+  const el = document.getElementById('quick-cats');
+  el.innerHTML = QUICK_CATS.map(c =>
+    `<button class="quick-cat" onclick="selectQuickCat('${c}', this)">${CAT_ICONS[c]} ${c}</button>`
+  ).join('');
+}
+
+function selectQuickCat(cat, btn) {
+  document.querySelectorAll('.quick-cat').forEach(b => b.classList.remove('selected'));
+  const input = document.getElementById('input-cat');
+  if (input.value === cat) { input.value = ''; }
+  else { input.value = cat; btn.classList.add('selected'); }
+}
+
+function syncQuickCatSelection() {
+  const val = document.getElementById('input-cat').value;
+  document.querySelectorAll('.quick-cat').forEach(b => {
+    b.classList.toggle('selected', b.textContent.includes(val) && val !== '');
+  });
+}
+
+function openModal(mode, id) {
+  modalMode  = mode;
+  editingId  = id || null;
+  document.getElementById('modal-title').textContent = mode === 'edit' ? 'Editar produto' : 'Adicionar produto';
+
+  if (mode === 'edit') {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    document.getElementById('input-name').value = item.name;
+    document.getElementById('input-qty').value  = item.qty  || '';
+    document.getElementById('input-unit').value = item.unit || '';
+    document.getElementById('input-cat').value  = item.cat  || '';
+    document.getElementById('suggestions-wrap').style.display = 'none';
+  } else {
+    const qi = document.getElementById('quick-input').value.trim();
+    document.getElementById('input-name').value = qi;
+    document.getElementById('input-qty').value  = '';
+    document.getElementById('input-unit').value = '';
+    document.getElementById('input-cat').value  = '';
+    renderSuggestions(qi);
+    document.getElementById('input-name').addEventListener('input', onModalNameInput);
+  }
+
+  syncQuickCatSelection();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('input-name').focus(), 100);
+}
+
+function onModalNameInput(e) {
+  renderSuggestions(e.target.value);
+}
+
+function renderSuggestions(query) {
+  const wrap = document.getElementById('suggestions-wrap');
+  const list = document.getElementById('suggestions-list');
+  const q = query.trim().toLowerCase();
+  const matches = catalog.filter(p =>
+    !q || p.name.toLowerCase().includes(q) || (p.cat || '').toLowerCase().includes(q)
+  );
+  if (matches.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  list.innerHTML = matches.map(p => {
+    const meta = [p.qty && p.unit ? `${p.qty} ${p.unit}` : p.qty || p.unit || '', p.cat].filter(Boolean).join(' · ');
+    return `<div class="suggestion-row" onclick="useSuggestion(${p.id})">
+      <div class="suggestion-row-body">
+        <div class="suggestion-row-name">${escHtml(p.name)}</div>
+        ${meta ? `<div class="suggestion-row-meta">${escHtml(meta)}</div>` : ''}
+      </div>
+      <span class="suggestion-use">usar →</span>
+    </div>`;
+  }).join('');
+}
+
+function useSuggestion(id) {
+  const p = catalog.find(c => c.id === id);
+  if (!p) return;
+  document.getElementById('input-name').value = p.name;
+  document.getElementById('input-qty').value  = p.qty  || '';
+  document.getElementById('input-unit').value = p.unit || '';
+  document.getElementById('input-cat').value  = p.cat  || '';
+  document.getElementById('suggestions-wrap').style.display = 'none';
+  syncQuickCatSelection();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('input-name').removeEventListener('input', onModalNameInput);
+  document.getElementById('suggestions-wrap').style.display = 'none';
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function saveItem() {
+  const name = document.getElementById('input-name').value.trim();
+  if (!name) { document.getElementById('input-name').focus(); return; }
+  const qty  = document.getElementById('input-qty').value.trim();
+  const unit = document.getElementById('input-unit').value;
+  const cat  = document.getElementById('input-cat').value.trim();
+
+  if (modalMode === 'add') {
+    // clear quick input if same name
+    const qi = document.getElementById('quick-input');
+    if (qi.value.trim() === name) qi.value = '';
+    items.push({ id: nextId++, name, qty, unit, cat, done: false });
+  } else {
+    const item = items.find(i => i.id === editingId);
+    if (item) { item.name = name; item.qty = qty; item.unit = unit; item.cat = cat; }
+  }
+
+  save(); render(); closeModal();
+}
+
+// ============================================================
+// KEYBOARD
+// ============================================================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeCatalogModal(); }
+  if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) {
+    if (document.activeElement.tagName !== 'BUTTON') saveItem();
+  }
+  if (e.key === 'Enter' && document.getElementById('catalog-modal-overlay').classList.contains('open')) {
+    if (document.activeElement.tagName !== 'BUTTON') saveCatalogItem();
+  }
+});
+
+// sync quick cat when typing manually
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('input-cat').addEventListener('input', syncQuickCatSelection);
+  document.getElementById('cat-input-cat').addEventListener('input', syncCatalogQuickCatSelection);
+});
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.header-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('section-lista').style.display   = tab === 'lista'   ? 'block' : 'none';
+  document.getElementById('section-catalog').style.display = tab === 'catalog' ? 'block' : 'none';
+  document.getElementById('add-bar-lista').style.display   = tab === 'lista'   ? 'flex'  : 'none';
+  document.getElementById('header-count').style.display    = tab === 'lista'   ? ''      : 'none';
+  if (tab === 'catalog') renderCatalog();
+}
+
+// ============================================================
+// CATALOG
+// ============================================================
+function buildCatalogQuickCats() {
+  const el = document.getElementById('cat-quick-cats');
+  if (!el) return;
+  el.innerHTML = QUICK_CATS.map(c =>
+    `<button class="quick-cat" onclick="selectCatalogQuickCat('${c}', this)">${CAT_ICONS[c]} ${c}</button>`
+  ).join('');
+}
+
+function selectCatalogQuickCat(cat, btn) {
+  document.querySelectorAll('#cat-quick-cats .quick-cat').forEach(b => b.classList.remove('selected'));
+  const input = document.getElementById('cat-input-cat');
+  if (input.value === cat) { input.value = ''; }
+  else { input.value = cat; btn.classList.add('selected'); }
+}
+
+function syncCatalogQuickCatSelection() {
+  const val = document.getElementById('cat-input-cat').value;
+  document.querySelectorAll('#cat-quick-cats .quick-cat').forEach(b => {
+    b.classList.toggle('selected', b.textContent.includes(val) && val !== '');
+  });
+}
+
+function openCatalogModal(id) {
+  catalogEditingId = id || null;
+  document.getElementById('catalog-modal-title').textContent = id ? 'Editar produto' : 'Novo produto';
+  if (id) {
+    const p = catalog.find(c => c.id === id);
+    if (!p) return;
+    document.getElementById('cat-input-name').value = p.name;
+    document.getElementById('cat-input-qty').value  = p.qty  || '';
+    document.getElementById('cat-input-unit').value = p.unit || '';
+    document.getElementById('cat-input-cat').value  = p.cat  || '';
+  } else {
+    document.getElementById('cat-input-name').value = '';
+    document.getElementById('cat-input-qty').value  = '';
+    document.getElementById('cat-input-unit').value = '';
+    document.getElementById('cat-input-cat').value  = '';
+  }
+  syncCatalogQuickCatSelection();
+  document.getElementById('catalog-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('cat-input-name').focus(), 100);
+}
+
+function closeCatalogModal() {
+  document.getElementById('catalog-modal-overlay').classList.remove('open');
+}
+
+function handleCatalogOverlayClick(e) {
+  if (e.target === document.getElementById('catalog-modal-overlay')) closeCatalogModal();
+}
+
+function saveCatalogItem() {
+  const name = document.getElementById('cat-input-name').value.trim();
+  if (!name) { document.getElementById('cat-input-name').focus(); return; }
+  const qty  = document.getElementById('cat-input-qty').value.trim();
+  const unit = document.getElementById('cat-input-unit').value;
+  const cat  = document.getElementById('cat-input-cat').value.trim();
+  if (catalogEditingId) {
+    const p = catalog.find(c => c.id === catalogEditingId);
+    if (p) { p.name = name; p.qty = qty; p.unit = unit; p.cat = cat; }
+  } else {
+    catalog.push({ id: catalogNextId++, name, qty, unit, cat });
+  }
+  saveCatalog();
+  closeCatalogModal();
+  renderCatalog();
+}
+
+function deleteCatalogItem(id) {
+  if (!confirm('Remover este produto da base?')) return;
+  catalog = catalog.filter(c => c.id !== id);
+  saveCatalog();
+  renderCatalog();
+}
+
+function addFromCatalog(id) {
+  const p = catalog.find(c => c.id === id);
+  if (!p) return;
+  items.push({ id: nextId++, name: p.name, qty: p.qty || '', unit: p.unit || '', cat: p.cat || '', done: false });
+  save();
+  switchTab('lista', document.querySelector('.header-tab'));
+  render();
+}
+
+function renderCatalog() {
+  const grid = document.getElementById('catalog-grid');
+  const q = (document.getElementById('catalog-search').value || '').trim().toLowerCase();
+  const filtered = catalog.filter(p =>
+    !q || p.name.toLowerCase().includes(q) || (p.cat || '').toLowerCase().includes(q)
+  );
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="catalog-empty">${
+      catalog.length === 0
+        ? 'Ainda não tens produtos guardados.<br>Cria o primeiro!'
+        : 'Nenhum produto encontrado.'
+    }</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(p => {
+    const meta = [p.qty && p.unit ? `${p.qty} ${p.unit}` : (p.qty || p.unit || ''), p.cat ? `${getCatIcon(p.cat)} ${p.cat}` : ''].filter(Boolean).join(' · ');
+    return `<div class="catalog-item">
+      <div class="catalog-item-body">
+        <div class="catalog-item-name">${escHtml(p.name)}</div>
+        ${meta ? `<div class="catalog-item-meta">${escHtml(meta)}</div>` : ''}
+      </div>
+      <div class="catalog-item-right">
+        <button class="catalog-add-btn" onclick="addFromCatalog(${p.id})">+ lista</button>
+        <button class="catalog-act-btn" onclick="openCatalogModal(${p.id})">editar</button>
+        <button class="catalog-act-btn del" onclick="deleteCatalogItem(${p.id})">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+init();
+</script>
+</body>
+</html>
